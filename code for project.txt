@@ -1,0 +1,58 @@
+proc import
+Datafile = 'P:/Project/Survey_cleaned_data.csv'
+out = rmcat;
+run;
+
+/* Define format for age groups */
+proc format;
+    value age_group
+        low - 20 = 'Under 20'
+        20 - 29 = '20-29'
+        30 - 39 = '30-39'
+        40 - 49 = '40-49'
+        50 - high = '50+';
+run;
+
+/* Create a new variable for age groups */
+data rmcat_grouped;
+    set rmcat;
+    Age_Group = put(Age, age_group.);
+run;
+
+proc freq
+data =  rmcat_grouped;
+tables mental_health_consequence*Age_Group/ norow nocol nopercent;
+run;
+
+proc freq
+data = rmcat_grouped;
+tables mental_health_consequence*Age_Group/ nofreq expected norow nocol nopercent;
+run;
+
+proc freq
+data = rmcat_grouped;
+tables mental_health_consequence*Age_Group/ nofreq norow nocol nopercent cellchi2 chisq;
+run;
+
+data sniff;
+set rmcat_grouped;
+
+ods graphics on;
+
+proc corresp data = rmcat_grouped chi2p;
+tables mental_health_consequence,Age_Group;
+run;
+
+proc freq data = rmcat_grouped;
+tables mental_health_consequence*Age_Group/ crosslist(stdress);
+run;
+
+/* Bar plot for grouped Age variable */
+proc sgplot data=rmcat_grouped;
+    vbar Age_Group / datalabel;
+run;
+
+/* Bar plot for Mental Health Consequence variable */
+proc sgplot data=rmcat_grouped;
+    vbar mental_health_consequence / datalabel;
+run;
